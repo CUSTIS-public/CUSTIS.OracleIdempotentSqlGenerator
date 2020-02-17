@@ -3,6 +3,7 @@
 EF migrator isn't idempotent in case of using Oracle DB. Consider you have a migration which consists of 2 operations:
 * create table MY_TABLE1;
 * create table MY_TABLE2.
+
 If the migration falls after 1-st statement, then Oracle DB will become inconclusive:
 each DDL in Oracle commits the transaction, so DB will contain MY_TABLE1.
 The migration could neither be run once more (as Oracle will fall on the attemp to create MY_TABLE1),
