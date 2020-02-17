@@ -26,6 +26,18 @@ For example, it generates such a code for creating MY_COLUMN in MY_TABLE:
 P.S. EF with MS SQL is idempotent out of the box. 
 MS SQL has transactional DDL, which causes the migration to be fully installed or rolled back in case of error.
 
+# Usage
+
+Just replace IMigrationsSqlGenerator when configurint DB Context:
+
+    public class MyDbContext : DbContext
+    {
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.ReplaceService<IMigrationsSqlGenerator, IdempotentSqlGenerator>();
+        }
+    }
+
 # Running tests
 * Open CMD at CUSTIS.OracleIdempotentSqlGenerator.Tests
 * Run:
