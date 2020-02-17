@@ -11,16 +11,16 @@ nor rolled back (EF "thinks" that migration is not installed and won't get it do
 Idempotent SQL Generator for Oracle generates code, that could be rerun in case of failure. 
 For example, it generates such a code for creating MY_COLUMN in MY_TABLE:
 
-DECLARE
-    i NUMBER;
-BEGIN
-    SELECT COUNT(*) INTO i
-    FROM user_tab_columns
-    WHERE table_name = 'MY_TABLE' AND column_name = 'MY_COLUMN';
-    IF I != 1 THEN
-        EXECUTE IMMEDIATE 'ALTER TABLE MY_TABLE ADD (MY_COLUMN DATE)';  
-    END IF;       
-END;
+    DECLARE
+        i NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO i
+        FROM user_tab_columns
+        WHERE table_name = 'MY_TABLE' AND column_name = 'MY_COLUMN';
+        IF I != 1 THEN
+            EXECUTE IMMEDIATE 'ALTER TABLE MY_TABLE ADD (MY_COLUMN DATE)';  
+        END IF;       
+    END;
 
 P.S. EF with MS SQL is idempotent out of the box. 
 MS SQL has transactional DDL, which causes the migration to be fully installed or rolled back in case of error.
@@ -30,5 +30,5 @@ MS SQL has transactional DDL, which causes the migration to be fully installed o
 * Run:
   * dotnet user-secrets set DB ****
   * dotnet user-secrets set Schema ****
-  * dotnet user-secrets set Pwd ****
+  * dotnet user-secrets set Pwd ****    
 * Tests will run at Schema@DB, which could be any schema (even empty)
