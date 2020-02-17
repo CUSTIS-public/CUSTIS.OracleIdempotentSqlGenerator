@@ -45,3 +45,8 @@ Just replace IMigrationsSqlGenerator when configuring DB Context:
   * dotnet user-secrets set Schema ****
   * dotnet user-secrets set Pwd ****    
 * Tests will run at Schema@DB, which could be any schema (even empty)
+
+# Known issues
+At time of 2020-02-17 OracleMigrationsSqlGenerator has no support of RestartSequenceOperation.
+It generates the code, that couldn't be run on OracleDB (ALTER SEQUENCE...RESTART WITH).
+As Idempotent SqlGenerator inherits from OracleMigrationsSqlGenerator, it has the same problem.
