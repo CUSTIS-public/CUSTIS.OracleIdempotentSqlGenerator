@@ -28,7 +28,7 @@ MS SQL has transactional DDL, which causes the migration to be fully installed o
 
 # Usage
 
-Just replace IMigrationsSqlGenerator when configurint DB Context:
+Just replace IMigrationsSqlGenerator when configuring DB Context:
 
     public class MyDbContext : DbContext
     {
