@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Description>Idempotent SQL Generator for Oracle</Description>
+    <Copyright>CUSTIS</Copyright>
+    <Authors>ishatalkin@gmail.com</Authors>
+    <Company>CUSTIS</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/CUSTIS-public/CUSTIS.OracleIdempotentSqlGenerator</RepositoryUrl>
+    <PackageTags>Oracle, Idempotent, SqlGenerator, EFCore, Entity Framework Core</PackageTags>
+    <Product>CUSTIS.OracleIdempotentSqlGenerator</Product>
   </PropertyGroup>
 
   <ItemGroup>
