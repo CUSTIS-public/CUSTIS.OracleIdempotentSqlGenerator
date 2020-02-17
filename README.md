@@ -17,7 +17,7 @@ For example, it generates such a code for creating MY_COLUMN in MY_TABLE:
     BEGIN
         SELECT COUNT(*) INTO i
         FROM user_tab_columns
-        WHERE table_name = 'MY_TABLE' AND column_name = 'MY_COLUMN';
+        WHERE table_name = UPPER('MY_TABLE') AND column_name = UPPER('MY_COLUMN');
         IF I != 1 THEN
             EXECUTE IMMEDIATE 'ALTER TABLE MY_TABLE ADD (MY_COLUMN DATE)';  
         END IF;       
