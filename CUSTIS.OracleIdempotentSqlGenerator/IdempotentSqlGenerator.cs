@@ -43,8 +43,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Creating column {operation.Name} in table {operation.Table};");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_tab_columns");
-                builder.AppendLine($"WHERE table_name = '{operation.Table}'");
-                builder.AppendLine($"AND column_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE table_name = UPPER('{operation.Table}')");
+                builder.AppendLine($"AND column_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 0 THEN");
                 using (builder.Indent())
                 {
@@ -65,8 +65,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Deleting column {operation.Name} from table {operation.Table};");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_tab_columns");
-                builder.AppendLine($"WHERE table_name = '{operation.Table}'");
-                builder.AppendLine($"AND column_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE table_name = UPPER('{operation.Table}')");
+                builder.AppendLine($"AND column_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -86,8 +86,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Renaming column {operation.Table}.{operation.Name} -> {operation.NewName};");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_tab_columns");
-                builder.AppendLine($"WHERE table_name = '{operation.Table}'");
-                builder.AppendLine($"AND column_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE table_name = UPPER('{operation.Table}')");
+                builder.AppendLine($"AND column_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -114,7 +114,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Creating table {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_objects");
-                builder.AppendLine($"WHERE object_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE object_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 0 THEN");
                 using (builder.Indent())
                 {
@@ -133,7 +133,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Deleting table {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_objects");
-                builder.AppendLine($"WHERE object_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE object_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -151,7 +151,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Renaming table {operation.Name} -> {operation.NewName}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_objects");
-                builder.AppendLine($"WHERE object_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE object_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -175,7 +175,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Creating index {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_indexes");
-                builder.AppendLine($"WHERE index_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE index_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 0 THEN");
                 using (builder.Indent())
                 {
@@ -193,7 +193,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Deleting index {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_indexes");
-                builder.AppendLine($"WHERE index_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE index_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -212,7 +212,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Renaming index {operation.Name} -> {operation.NewName}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_indexes");
-                builder.AppendLine($"WHERE index_name = '{operation.Name}';");
+                builder.AppendLine($"WHERE index_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -232,7 +232,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Creating primary key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
-                builder.AppendLine($"WHERE constraint_name = '{operation.Name}' AND constraint_type = 'P';");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'P';");
                 builder.AppendLine("IF I = 0 THEN");
                 using (builder.Indent())
                 {
@@ -250,7 +250,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Deleting primary key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
-                builder.AppendLine($"WHERE constraint_name = '{operation.Name}' AND constraint_type = 'P';");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'P';");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -273,7 +273,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Creating foreign key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
-                builder.AppendLine($"WHERE constraint_name = '{operation.Name}' AND constraint_type = 'R';");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'R';");
                 builder.AppendLine("IF I = 0 THEN");
                 using (builder.Indent())
                 {
@@ -291,7 +291,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Deleting foreign key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
-                builder.AppendLine($"WHERE constraint_name = '{operation.Name}' AND constraint_type = 'R';");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'R';");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -309,7 +309,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Creating unique constraint {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
-                builder.AppendLine($"WHERE constraint_name = '{operation.Name}' AND constraint_type = 'U';");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'U';");
                 builder.AppendLine("IF I = 0 THEN");
                 using (builder.Indent())
                 {
@@ -329,7 +329,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Deleting unique constraint {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
-                builder.AppendLine($"WHERE constraint_name = '{operation.Name}' AND constraint_type = 'U';");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'U';");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -353,7 +353,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Creating sequence {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_sequences ");
-                builder.AppendLine($"WHERE sequence_name  = '{operation.Name}';");
+                builder.AppendLine($"WHERE sequence_name  = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 0 THEN");
                 using (builder.Indent())
                 {
@@ -373,7 +373,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Deleting sequence {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_sequences ");
-                builder.AppendLine($"WHERE sequence_name  = '{operation.Name}';");
+                builder.AppendLine($"WHERE sequence_name  = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -393,7 +393,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             {
                 builder.AppendLine($"-- Renaming sequence {operation.Name} -> {operation.NewName}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_sequences ");
-                builder.AppendLine($"WHERE sequence_name  = '{operation.Name}';");
+                builder.AppendLine($"WHERE sequence_name  = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
@@ -415,7 +415,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(RestartSequenceOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            throw new NotImplementedException("Oracle doesn't support restart of sequence. See https://stackoverflow.com/a/93633 for details");
+            // At time of 2020-02-17 OracleMigrationsSqlGenerator has no support of RestartSequenceOperation
+            // It generates the code, that couldn't be run on OracleDB (ALTER SEQUENCE...RESTART WITH)
+            base.Generate(operation, model, builder);
         }
 
         #endregion
