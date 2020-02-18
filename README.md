@@ -54,3 +54,8 @@ public class MyDbContext : DbContext
 At time of 2020-02-17 OracleMigrationsSqlGenerator has no support of RestartSequenceOperation.
 It generates the code, that couldn't be run on OracleDB (ALTER SEQUENCE...RESTART WITH).
 As Idempotent SqlGenerator inherits from OracleMigrationsSqlGenerator, it has the same problem.
+
+# Publish
+* Change version in CUSTIS.OracleIdempotentSqlGenerator
+* Pack CUSTIS.OracleIdempotentSqlGenerator
+* Upload it to nuget

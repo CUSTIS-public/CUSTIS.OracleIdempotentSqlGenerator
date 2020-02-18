@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -8,8 +8,9 @@
     <Company>CUSTIS</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/CUSTIS-public/CUSTIS.OracleIdempotentSqlGenerator</RepositoryUrl>
-    <PackageTags>Oracle, Idempotent, SqlGenerator, EFCore, Entity Framework Core</PackageTags>
+    <PackageTags>Oracle, Idempotent, SqlGenerator, EFCore, EntityFrameworkCore, Migration, IMigrationsSqlGenerator</PackageTags>
     <Product>CUSTIS.OracleIdempotentSqlGenerator</Product>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
