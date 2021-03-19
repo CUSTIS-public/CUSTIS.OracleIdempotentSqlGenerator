@@ -10,14 +10,15 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
     {
         private readonly string _statementTerminator;
 
-        public IgnoreEndOfStatementBuilder(IRelationalCommandBuilderFactory commandBuilderFactory, string statementTerminator) : base(commandBuilderFactory)
+        public IgnoreEndOfStatementBuilder(MigrationsSqlGeneratorDependencies deps, string statementTerminator) : base(deps)
         {
             _statementTerminator = statementTerminator;
         }
 
         public bool IgnoreEndOfStatement { get; set; } = false;
 
-        public override MigrationCommandListBuilder AppendLine(object o)
+
+        public override MigrationCommandListBuilder AppendLine(string o)
         {
             if (IgnoreEndOfStatement && o == _statementTerminator)
             {

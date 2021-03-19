@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using Microsoft.Extensions.Logging;
 using Oracle.EntityFrameworkCore.Infrastructure.Internal;
 using Oracle.EntityFrameworkCore.Migrations;
 
@@ -18,20 +19,34 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
         /// <summary>
         /// Idempotent SQL generator for Oracle
         /// </summary>
-        public IdempotentSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IOracleOptions options, IDiagnosticsLogger<DbLoggerCategory.Migrations> logger = null) 
-            : base(dependencies, options, logger)
+        public IdempotentSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IOracleOptions options) 
+            : base(dependencies, options)
         {
         }
 
-        public override IReadOnlyList<MigrationCommand> Generate(IReadOnlyList<MigrationOperation> operations, IModel model = null)
+        public override IReadOnlyList<MigrationCommand> Generate(IReadOnlyList<MigrationOperation> operations, IModel model = null, MigrationsSqlGenerationOptions options = MigrationsSqlGenerationOptions.Default)
         {
-            var builder = new IgnoreEndOfStatementBuilder(Dependencies.CommandBuilderFactory, Dependencies.SqlGenerationHelper.StatementTerminator);
-            foreach (var operation in operations)
+            var field = typeof(OracleMigrationsSqlGenerator)
+                .GetField("_operations", BindingFlags.Instance | BindingFlags.NonPublic);
+            try
             {
-                Generate(operation, model, builder);
+                if (operations == null)
+                {
+                    throw new ArgumentNullException(nameof(operations));
+                }
+                field.SetValue(this, operations);
+                this.Options = options;
+                var commandListBuilder = new IgnoreEndOfStatementBuilder(Dependencies, Dependencies.SqlGenerationHelper.StatementTerminator);
+                foreach (var operation in operations)
+                {
+                    Generate(operation, model, commandListBuilder);
+                }
+                return commandListBuilder.GetCommandList();
             }
-
-            return builder.GetCommandList();
+            finally
+            {
+                field.SetValue(this, null);
+            }
         }
 
         #region Columns
@@ -244,7 +259,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             });
         }
 
-        protected override void Generate(DropPrimaryKeyOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
+        protected override void Generate(DropPrimaryKeyOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate= true)
         {
             Generate(builder, terminate, () =>
             {
@@ -262,10 +277,6 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             });
         }
 
-        protected override void Generate(DropPrimaryKeyOperation operation, IModel model, MigrationCommandListBuilder builder)
-        {
-            Generate(operation, model, builder, true);
-        }
 
         protected override void Generate(AddForeignKeyOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
