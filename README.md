@@ -57,5 +57,5 @@ As Idempotent SqlGenerator inherits from OracleMigrationsSqlGenerator, it has th
 
 # Publish
 * Change version in CUSTIS.OracleIdempotentSqlGenerator
-* Pack CUSTIS.OracleIdempotentSqlGenerator
+* Pack CUSTIS.OracleIdempotentSqlGenerator (`dotnet pack`)
 * Upload it to nuget
