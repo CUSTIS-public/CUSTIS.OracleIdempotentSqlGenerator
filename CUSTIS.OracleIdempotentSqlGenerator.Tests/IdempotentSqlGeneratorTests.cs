@@ -1,8 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 {
@@ -11,6 +14,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
     /// </summary>
     public class IdempotentSqlGeneratorTests
     {
+        private readonly ITestOutputHelper _testOutputHelper;
         private readonly IMigrationsSqlGenerator _sqlGenerator;
         
         private readonly IdempotentDbContext _dbContext = new IdempotentDbContext();
@@ -27,8 +31,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         private const string SequenceName = "TEST_SEQ_1";
         private const string NewSequenceName = "NEW_TEST_SEQ_1";
 
-        public IdempotentSqlGeneratorTests()
+        public IdempotentSqlGeneratorTests(ITestOutputHelper testOutputHelper)
         {
+            _testOutputHelper = testOutputHelper;
             _sqlGenerator = _dbContext.GetService<IMigrationsSqlGenerator>();
         }
 
@@ -299,6 +304,52 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         }
 
         [Fact]
+        public void Generate_AddCheckConstraintOperation_IsIdempotent()
+        {
+            //Arrange
+            ReCreateTestTable();
+            var operations = new[]
+            {
+                new AddCheckConstraintOperation
+                {
+                    Name = Column1Name,
+                    Table = TableName,
+                    Sql = $"{Column1Name} BETWEEN 1 AND 2"
+                }
+            };
+
+            //Act 
+            var commands1 = _sqlGenerator.Generate(operations);
+            var commands = commands1;
+
+            //Assert
+            Assert.Equal(1, commands.Count);
+            Assert.False(DoesCheckConstraintExist(Column1Name));
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.True(DoesCheckConstraintExist(Column1Name));
+        }
+
+        [Fact]
+        public void Generate_DropCheckConstraintOperation_IsIdempotent()
+        {
+            //Arrange
+            ReCreateTestTable();
+            CreateCheckConstraint(Column1Name);
+            var operations = new[] { new DropCheckConstraintOperation { Name = Column1Name, Table = TableName } };
+
+            //Act 
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(1, commands.Count);
+            Assert.True(DoesCheckConstraintExist(Column1Name));
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.False(DoesCheckConstraintExist(Column1Name));
+        }
+
+        [Fact]
         public void Generate_CreateIndexOperation_IsIdempotent()
         {
             //Arrange
@@ -435,6 +486,22 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Database.ExecuteSqlRaw(commands[0].CommandText);
         }
 
+        private void CreateCheckConstraint(string name)
+        {
+            var operations = new[]
+            {
+                new AddCheckConstraintOperation
+                {
+                    Name = name,
+                    Table = TableName,
+                    Sql = $"{Column1Name} BETWEEN 1 AND 2"
+                }
+            };
+
+            var commands = _sqlGenerator.Generate(operations);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+        }
+
         private bool DoesPrimaryKeyExist(string name)
         {
             var res = ExecuteScalar<decimal>("SELECT COUNT(*) FROM USER_CONSTRAINTS " +
@@ -455,6 +522,14 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                                              $"WHERE CONSTRAINT_TYPE  = 'U' AND CONSTRAINT_NAME = '{name}'");
             return res != 0;
         }
+
+        private bool DoesCheckConstraintExist(string name)
+        {
+            var res = ExecuteScalar<decimal>("SELECT COUNT(*) FROM USER_CONSTRAINTS " +
+                                             $"WHERE CONSTRAINT_TYPE  = 'C' AND CONSTRAINT_NAME = '{name}'");
+            return res != 0;
+        }
+
 
         private bool DoesIndexExist(string indexName)
         {

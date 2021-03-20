@@ -354,6 +354,53 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             });
         }
 
+        protected override void Generate(AddCheckConstraintOperation operation, IModel model, MigrationCommandListBuilder builder)
+        {
+            Generate(builder, true, () =>
+            {
+                builder.AppendLine($"-- Creating check constraint {operation.Name}");
+                builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'C';");
+                builder.AppendLine("IF I = 0 THEN");
+                using (builder.Indent())
+                {
+                    builder.Append("EXECUTE IMMEDIATE '");
+                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    base.Generate(operation, model, builder);
+                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    builder.AppendLine("';");
+                }
+                builder.AppendLine("END IF;");
+            });
+        }
+
+        /// <summary>
+        ///     Builds commands for the given <see cref="T:Microsoft.EntityFrameworkCore.Migrations.Operations.DropCheckConstraintOperation" /> by making calls on the given
+        ///     <see cref="T:Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder" />, and then terminates the final command.
+        /// </summary>
+        /// <param name="operation"> The operation. </param>
+        /// <param name="model"> The target model which may be <see langword="null" /> if the operations exist without a model. </param>
+        /// <param name="builder"> The command builder to use to build the commands. </param>
+        protected override void Generate(DropCheckConstraintOperation operation, IModel model, MigrationCommandListBuilder builder)
+        {
+            Generate(builder, true, () =>
+            {
+                builder.AppendLine($"-- Deleting unique constraint {operation.Name}");
+                builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
+                builder.AppendLine($"WHERE constraint_name = UPPER('{operation.Name}') AND constraint_type = 'C';");
+                builder.AppendLine("IF I = 1 THEN");
+                using (builder.Indent())
+                {
+                    builder.Append("EXECUTE IMMEDIATE '");
+                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    base.Generate(operation, model, builder);
+                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    builder.AppendLine("';");
+                }
+                builder.AppendLine("END IF;");
+            });
+        }
+
         #endregion
 
         #region Sequence
