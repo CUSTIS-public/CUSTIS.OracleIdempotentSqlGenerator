@@ -36,7 +36,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 }
                 field.SetValue(this, operations);
                 this.Options = options;
-                var commandListBuilder = new IgnoreEndOfStatementBuilder(Dependencies, Dependencies.SqlGenerationHelper.StatementTerminator);
+                var commandListBuilder = new CustomStatementBuilder(Dependencies, Dependencies.SqlGenerationHelper.StatementTerminator);
                 foreach (var operation in operations)
                 {
                     Generate(operation, model, commandListBuilder);
@@ -64,8 +64,20 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
+                    ((CustomStatementBuilder)builder).EscapeQuotes = true;
                     base.Generate(operation, model, builder, false);
+                    ((CustomStatementBuilder)builder).EscapeQuotes = false;
                     builder.Append("';");
+                    if (operation.IsRowVersion)
+                    {
+                        builder.AppendLine($"EXECUTE IMMEDIATE 'CREATE OR REPLACE TRIGGER \"rowversion_{operation.Table}\"")
+                            .AppendLine($"BEFORE INSERT OR UPDATE ON \"{operation.Table}\"")
+                            .AppendLine("FOR EACH ROW")
+                            .AppendLine("BEGIN")
+                            .AppendLine(
+                                $":NEW.\"{operation.Name}\" := UTL_RAW.CAST_FROM_BINARY_INTEGER(UTL_RAW.CAST_TO_BINARY_INTEGER(NVL(:OLD.\"{operation.Name}\", ''00000000'')) + 1);")
+                            .AppendLine("END;';");
+                    }
                     builder.AppendLine();
                 }
 
@@ -107,9 +119,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.Append("';");
                     builder.AppendLine();
                 }
@@ -131,13 +143,17 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_objects");
                 builder.AppendLine($"WHERE object_name = UPPER('{operation.Name}');");
                 builder.AppendLine("IF I = 0 THEN");
+                builder.AppendLine("BEGIN");
                 using (builder.Indent())
                 {
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).InsideCreateTable = true;
                     base.Generate(operation, model, builder, true);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).InsideCreateTable = false;
                 }
-
+                builder.AppendLine("");
+                builder.AppendLine("END;");
                 builder.AppendLine("END IF;");
             });
         }
@@ -171,9 +187,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -232,9 +248,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -325,9 +341,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder) builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder) builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder) builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder) builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -345,9 +361,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -365,9 +381,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -392,9 +408,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -416,9 +432,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -436,9 +452,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
@@ -456,13 +472,37 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
                     base.Generate(operation, model, builder);
-                    ((IgnoreEndOfStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
                     builder.AppendLine("';");
                 }
                 builder.AppendLine("END IF;");
             });
+        }
+
+        protected override void Generate(AlterColumnOperation operation, IModel model, MigrationCommandListBuilder builder)
+        {
+            base.Generate(operation, model, builder);
+        }
+
+        /// <summary>
+        ///     <para>
+        ///         Can be overridden by database providers to build commands for the given <see cref="T:Microsoft.EntityFrameworkCore.Migrations.Operations.AlterTableOperation" />
+        ///         by making calls on the given <see cref="T:Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder" />.
+        ///     </para>
+        ///     <para>
+        ///         Note that the default implementation of this method does nothing because there is no common metadata
+        ///         relating to this operation. Providers only need to override this method if they have some provider-specific
+        ///         annotations that must be handled.
+        ///     </para>
+        /// </summary>
+        /// <param name="operation"> The operation. </param>
+        /// <param name="model"> The target model which may be <see langword="null" /> if the operations exist without a model. </param>
+        /// <param name="builder"> The command builder to use to build the commands. </param>
+        protected override void Generate(AlterTableOperation operation, IModel model, MigrationCommandListBuilder builder)
+        {
+            base.Generate(operation, model, builder);
         }
 
         protected override void Generate(AlterSequenceOperation operation, IModel model, MigrationCommandListBuilder builder)

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -16,7 +16,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
     {
         private readonly ITestOutputHelper _testOutputHelper;
         private readonly IMigrationsSqlGenerator _sqlGenerator;
-        
+
         private readonly IdempotentDbContext _dbContext = new IdempotentDbContext();
         private DatabaseFacade Database => _dbContext.Database;
 
@@ -30,6 +30,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         private const string Fk1Name = "FK_COLUMN_1";
         private const string SequenceName = "TEST_SEQ_1";
         private const string NewSequenceName = "NEW_TEST_SEQ_1";
+        private const string RowVersionColumnName = "TIMESTAMP";
 
         public IdempotentSqlGeneratorTests(ITestOutputHelper testOutputHelper)
         {
@@ -71,11 +72,65 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         }
 
         [Fact]
+        public void Generate_CreateTableWithRowVersion_CreatesTableWithRowVersion()
+        {
+            //Arrange
+            DropTestTable();
+            var operations = new[]
+            {
+                new CreateTableOperation
+                {
+                    Name = TableName,
+                    Columns =
+                    {
+                        new AddColumnOperation
+                        {
+                            Name = Column1Name,
+                            Table = TableName,
+                            ClrType = typeof(int),
+                            ColumnType = "number"
+                        },
+                        new AddColumnOperation
+                        {
+                            Name = RowVersionColumnName,
+                            Table = TableName,
+                            ClrType = typeof(byte[]),
+                            ColumnType = "RAW(8)",
+                            IsRowVersion = true,
+                            IsNullable = false,
+                            DefaultValue = new byte[0]
+                        }
+                    },
+                }
+            };
+
+            //Act 
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(1, commands.Count);
+            Assert.False(DoesTableExist(TableName));
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.True(DoesTableExist(TableName));
+
+            Database.ExecuteSqlRaw($"INSERT INTO {TableName} ({Column1Name}) VALUES (1)");
+            var initialTimestamp = ToInt64(ExecuteScalar<byte[]>($"SELECT {RowVersionColumnName} FROM {TableName}"));
+            Database.ExecuteSqlRaw($"UPDATE {TableName} SET {Column1Name} = 2");
+            var newTimestamp = ToInt64(ExecuteScalar<byte[]>($"SELECT {RowVersionColumnName} FROM {TableName}"));
+            Assert.NotEqual(initialTimestamp, newTimestamp);
+        }
+
+        private long ToInt64(byte[] byteArray)
+        {
+            return BitConverter.ToInt64(new byte[] { 0, 0, 0, 0 }.Concat(byteArray).ToArray());
+        }
+
+        [Fact]
         public void Generate_DropTableOperation_IsIdempotent()
         {
             //Arrange
             ReCreateTestTable();
-            var operations = new[] { new DropTableOperation {Name = TableName} };
+            var operations = new[] { new DropTableOperation { Name = TableName } };
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -196,7 +251,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreatePrimaryKey(Column1Name);
-            var operations = new[] {new DropPrimaryKeyOperation {Name = Column1Name, Table = TableName}};
+            var operations = new[] { new DropPrimaryKeyOperation { Name = Column1Name, Table = TableName } };
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -381,7 +436,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreateIndex(Index1Name, Column1Name);
-            var operations = new[] {new DropIndexOperation {Name = Index1Name}};
+            var operations = new[] { new DropIndexOperation { Name = Index1Name } };
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -570,12 +625,74 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         }
 
         [Fact]
+        public void Generate_AddRowVersionColumnOperation_IsIdempotent()
+        {
+            //Arrange
+            ReCreateTestTable();
+            var operations = new[]
+            {
+                new AddColumnOperation
+                {
+                    Name = RowVersionColumnName,
+                    Table = TableName,
+                    ClrType = typeof(byte[]),
+                    ColumnType = "RAW(8)",
+                    IsRowVersion = true,
+                    IsNullable = false,
+                    DefaultValue = new byte[0]
+                }
+            };
+
+            //Act 
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(1, commands.Count);
+            _testOutputHelper.WriteLine(commands[0].CommandText);
+            Assert.False(DoesColumnExist(RowVersionColumnName));
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.True(DoesColumnExist(RowVersionColumnName));
+        }
+
+        [Fact]
+        public void Generate_AddRowVersionColumnOperation_AddsRowVersion()
+        {
+            //Arrange
+            ReCreateTestTable();
+            var operations = new[]
+            {
+                new AddColumnOperation
+                {
+                    Name = RowVersionColumnName,
+                    Table = TableName,
+                    ClrType = typeof(byte[]),
+                    ColumnType = "RAW(8)",
+                    IsRowVersion = true,
+                    IsNullable = false,
+                    DefaultValue = new byte[0]
+                }
+            };
+            var commands = _sqlGenerator.Generate(operations);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+
+            //Act 
+            Database.ExecuteSqlRaw($"INSERT INTO {TableName} ({Column1Name}) VALUES (1)");
+            var initialTimestamp = ToInt64(ExecuteScalar<byte[]>($"SELECT {RowVersionColumnName} FROM {TableName}"));
+            Database.ExecuteSqlRaw($"UPDATE {TableName} SET {Column1Name} = 2");
+
+            //Assert
+            var newTimestamp = ToInt64(ExecuteScalar<byte[]>($"SELECT {RowVersionColumnName} FROM {TableName}"));
+            Assert.NotEqual(initialTimestamp, newTimestamp);
+        }
+
+        [Fact]
         public void Generate_DropColumnOperation_IsIdempotent()
         {
             //Arrange
             ReCreateTestTable();
             CreateColumn(Column2Name);
-            var operations = new[] {new DropColumnOperation {Name = Column2Name, Table = TableName}};
+            var operations = new[] { new DropColumnOperation { Name = Column2Name, Table = TableName } };
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -781,6 +898,41 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
         #endregion
 
+        #region Comments
+
+        [Fact(Skip = "Not impl")]
+        public void Generate_AlterColumnOperation_CommentIsSet()
+        {
+            //Arrange
+            ReCreateTestTable();
+            var operations = new[]
+            {
+                new AlterColumnOperation
+                {
+                    Name = Column1Name,
+                    Table = TableName,
+                    ClrType = typeof(int),
+                    Comment = "Some Comment"
+                }
+            };
+
+            //Act 
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.Equal("Some Comment", GetColumnComment(Column1Name));
+        }
+
+        private string GetColumnComment(string columnName)
+        {
+            return ExecuteScalar<string>("SELECT COMMENTS FROM ALL_COL_COMMENTS " +
+                                             $"WHERE table_name = '{TableName}' AND column_name = '{columnName}'");
+        }
+
+
+        #endregion
+
         private void ExecuteOperation(MigrationOperation operation)
         {
             var operations = new[]
@@ -804,7 +956,12 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             using var command = connection.CreateCommand();
             if (connection.State != System.Data.ConnectionState.Open) connection.Open();
             command.CommandText = sql;
-            return (T)command.ExecuteScalar();
+            var result = command.ExecuteScalar();
+            if (result == null || result is DBNull)
+            {
+                return default;
+            }
+            return (T)result;
         }
     }
 }
