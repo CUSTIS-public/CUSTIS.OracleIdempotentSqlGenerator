@@ -631,16 +631,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             ReCreateTestTable();
             var operations = new[]
             {
-                new AddColumnOperation
-                {
-                    Name = RowVersionColumnName,
-                    Table = TableName,
-                    ClrType = typeof(byte[]),
-                    ColumnType = "RAW(8)",
-                    IsRowVersion = true,
-                    IsNullable = false,
-                    DefaultValue = new byte[0]
-                }
+                CreateAddRowVersionOperation()
             };
 
             //Act 
@@ -655,6 +646,20 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.True(DoesColumnExist(RowVersionColumnName));
         }
 
+        private static AddColumnOperation CreateAddRowVersionOperation()
+        {
+            return new AddColumnOperation
+            {
+                Name = RowVersionColumnName,
+                Table = TableName,
+                ClrType = typeof(byte[]),
+                ColumnType = "RAW(8)",
+                IsRowVersion = true,
+                IsNullable = false,
+                DefaultValue = new byte[0]
+            };
+        }
+
         [Fact]
         public void Generate_AddRowVersionColumnOperation_AddsRowVersion()
         {
@@ -662,16 +667,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             ReCreateTestTable();
             var operations = new[]
             {
-                new AddColumnOperation
-                {
-                    Name = RowVersionColumnName,
-                    Table = TableName,
-                    ClrType = typeof(byte[]),
-                    ColumnType = "RAW(8)",
-                    IsRowVersion = true,
-                    IsNullable = false,
-                    DefaultValue = new byte[0]
-                }
+                CreateAddRowVersionOperation()
             };
             var commands = _sqlGenerator.Generate(operations);
             Database.ExecuteSqlRaw(commands[0].CommandText);
@@ -702,6 +698,29 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Database.ExecuteSqlRaw(commands[0].CommandText);
             Database.ExecuteSqlRaw(commands[0].CommandText);
             Assert.False(DoesColumnExist(Column2Name));
+        }
+
+        [Fact]
+        public void Generate_DropRowVersionColumnOperation_IsIdempotent()
+        {
+            //Arrange
+            ReCreateTestTable();
+            CreateRowVersionColumn();
+            var operations = new[] { new DropColumnOperation { Name = RowVersionColumnName, Table = TableName } };
+
+            //Act 
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.True(DoesColumnExist(RowVersionColumnName));
+            Assert.True(DoesTriggerExist("rowversion_TEST_TABLE"));
+            _testOutputHelper.WriteLine(commands[1].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[1].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[1].CommandText);
+            Assert.False(DoesColumnExist(RowVersionColumnName));
+            Assert.False(DoesTriggerExist("rowversion_TEST_TABLE"));
         }
 
         [Fact]
@@ -763,6 +782,13 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             return res != 0;
         }
 
+        private bool DoesTriggerExist(string triggerName)
+        {
+            var res = ExecuteScalar<decimal>("SELECT COUNT(*) FROM sys.all_triggers " +
+                                             $"WHERE table_name = '{TableName}' AND trigger_name = '{triggerName}'");
+            return res != 0;
+        }
+
         private void CreateColumn(string columnName)
         {
             var operations = new[]
@@ -774,6 +800,16 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                     ClrType = typeof(int),
                     ColumnType = "number"
                 }
+            };
+            var commands = _sqlGenerator.Generate(operations);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+        }
+
+        private void CreateRowVersionColumn()
+        {
+            var operations = new[]
+            {
+                CreateAddRowVersionOperation()
             };
             var commands = _sqlGenerator.Generate(operations);
             Database.ExecuteSqlRaw(commands[0].CommandText);

@@ -51,6 +51,11 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         #region Columns
 
+        private string GetRowVersionTriggerName(string tableName)
+        {
+            return $"rowversion_{tableName}";
+        }
+
         /// <inheritdoc />
         protected override void Generate(AddColumnOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
@@ -70,7 +75,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                     builder.Append("';");
                     if (operation.IsRowVersion)
                     {
-                        builder.AppendLine($"EXECUTE IMMEDIATE 'CREATE OR REPLACE TRIGGER \"rowversion_{operation.Table}\"")
+                        builder.AppendLine($"EXECUTE IMMEDIATE 'CREATE OR REPLACE TRIGGER \"{GetRowVersionTriggerName(operation.Table)}\"")
                             .AppendLine($"BEFORE INSERT OR UPDATE ON \"{operation.Table}\"")
                             .AppendLine("FOR EACH ROW")
                             .AppendLine("BEGIN")
@@ -100,6 +105,24 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                     builder.Append("EXECUTE IMMEDIATE '");
                     base.Generate(operation, model, builder, false);
                     builder.Append("';");
+                    builder.AppendLine();
+                }
+
+                builder.AppendLine("END IF;");
+            });
+
+            // dropping trigger of rowversion column
+            Generate(builder, terminate, () =>
+            {
+                var triggerName = GetRowVersionTriggerName(operation.Table);
+                builder.AppendLine($"-- Drop trigger {triggerName};");
+                builder.AppendLine("SELECT COUNT(*) INTO i FROM sys.all_triggers");
+                builder.AppendLine($"WHERE table_name = UPPER('{operation.Table}')");
+                builder.AppendLine($"AND trigger_name = '{triggerName}';");
+                builder.AppendLine("IF I = 1 THEN");
+                using (builder.Indent())
+                {
+                    builder.Append($"EXECUTE IMMEDIATE 'DROP TRIGGER \"{triggerName}\"';");
                     builder.AppendLine();
                 }
 
