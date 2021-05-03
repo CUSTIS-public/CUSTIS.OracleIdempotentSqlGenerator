@@ -59,7 +59,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
         /// <inheritdoc />
         protected override void Generate(AddColumnOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Creating column {operation.Name} in table {operation.Table};");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_tab_columns");
@@ -93,7 +93,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
         /// <inheritdoc />
         protected override void Generate(DropColumnOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Deleting column {operation.Name} from table {operation.Table};");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_tab_columns");
@@ -112,7 +112,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             });
 
             // dropping trigger of rowversion column
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 var triggerName = GetRowVersionTriggerName(operation.Table);
                 builder.AppendLine($"-- Drop trigger {triggerName};");
@@ -132,7 +132,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(RenameColumnOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Renaming column {operation.Table}.{operation.Name} -> {operation.NewName};");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_tab_columns");
@@ -160,7 +160,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
         /// <inheritdoc />
         protected override void Generate(CreateTableOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Creating table {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_objects");
@@ -183,7 +183,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(DropTableOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Deleting table {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_objects");
@@ -201,7 +201,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(RenameTableOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Renaming table {operation.Name} -> {operation.NewName}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_objects");
@@ -225,7 +225,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(CreateIndexOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Creating index {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_indexes");
@@ -243,7 +243,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(DropIndexOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Deleting index {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_indexes");
@@ -262,7 +262,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(RenameIndexOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Renaming index {operation.Name} -> {operation.NewName}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_indexes");
@@ -282,7 +282,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(AddPrimaryKeyOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Creating primary key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -300,7 +300,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(DropPrimaryKeyOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate= true)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Deleting primary key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -319,7 +319,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(AddForeignKeyOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Creating foreign key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -337,7 +337,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(DropForeignKeyOperation operation, IModel model, MigrationCommandListBuilder builder, bool terminate)
         {
-            Generate(builder, terminate, () =>
+            InIdempotentWrapper(builder, terminate, () =>
             {
                 builder.AppendLine($"-- Deleting foreign key {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -355,7 +355,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(AddUniqueConstraintOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Creating unique constraint {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -375,7 +375,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(DropUniqueConstraintOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Deleting unique constraint {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -395,7 +395,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(AddCheckConstraintOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Creating check constraint {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -422,7 +422,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
         /// <param name="builder"> The command builder to use to build the commands. </param>
         protected override void Generate(DropCheckConstraintOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Deleting unique constraint {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_constraints");
@@ -446,7 +446,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(CreateSequenceOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Creating sequence {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_sequences ");
@@ -466,7 +466,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(DropSequenceOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Deleting sequence {operation.Name}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_sequences ");
@@ -486,7 +486,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(RenameSequenceOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            Generate(builder, true, () =>
+            InIdempotentWrapper(builder, true, () =>
             {
                 builder.AppendLine($"-- Renaming sequence {operation.Name} -> {operation.NewName}");
                 builder.AppendLine("SELECT COUNT(*) INTO i FROM user_sequences ");
@@ -545,7 +545,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         #region Help code
 
-        private void Generate(MigrationCommandListBuilder builder, bool terminate, 
+        /// <summary> Generate code inside idempotent wrapper </summary>
+        protected virtual void InIdempotentWrapper(MigrationCommandListBuilder builder, bool terminate, 
             Action generate)
         {
             builder.AppendLine("DECLARE");
