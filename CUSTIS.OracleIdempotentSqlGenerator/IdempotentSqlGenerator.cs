@@ -69,8 +69,12 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 using (builder.Indent())
                 {
                     builder.Append("EXECUTE IMMEDIATE '");
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = true;
+                    ((CustomStatementBuilder)builder).InsideAddColumn = true;
                     ((CustomStatementBuilder)builder).EscapeQuotes = true;
-                    base.Generate(operation, model, builder, false);
+                    base.Generate(operation, model, builder, true);
+                    ((CustomStatementBuilder)builder).IgnoreEndOfStatement = false;
+                    ((CustomStatementBuilder)builder).InsideAddColumn = false;
                     ((CustomStatementBuilder)builder).EscapeQuotes = false;
                     builder.Append("';");
                     if (operation.IsRowVersion)
@@ -153,6 +157,32 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             });
         }
 
+        protected override void Generate(AlterColumnOperation operation, IModel model, MigrationCommandListBuilder builder)
+        {
+            var comment = operation.Comment;
+            operation.Comment = operation.OldColumn.Comment;
+
+            base.Generate(operation, model, builder);
+
+            if (comment == operation.OldColumn.Comment)
+                return;
+            builder.AppendLine("BEGIN");
+            using (builder.Indent())
+            {
+                builder
+                    .Append("EXECUTE IMMEDIATE '")
+                    .Append("COMMENT ON COLUMN ")
+                    .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema))
+                    .Append(".")
+                    .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name))
+                    .Append(" IS ")
+                    .Append($"''{comment}'''")
+                    .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            }
+            builder.AppendLine("END;");
+            builder.EndCommand();
+        }
+
         #endregion
 
         #region Table
@@ -217,6 +247,30 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 }
                 builder.AppendLine("END IF;");
             });
+        }
+
+        protected override void Generate(AlterTableOperation operation, IModel model, MigrationCommandListBuilder builder)
+        {
+            var comment = operation.Comment;
+            operation.Comment = operation.OldTable.Comment;
+
+            base.Generate(operation, model, builder);
+
+            if (comment == operation.OldTable.Comment)
+                return;
+            builder.AppendLine("BEGIN");
+            using (builder.Indent())
+            {
+                builder
+                    .Append("EXECUTE IMMEDIATE '")
+                    .Append("COMMENT ON TABLE ")
+                    .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
+                    .Append(" IS ")
+                    .Append($"''{comment}'''")
+                    .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            }
+            builder.AppendLine("END;");
+            builder.EndCommand();
         }
 
         #endregion
@@ -502,30 +556,6 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 }
                 builder.AppendLine("END IF;");
             });
-        }
-
-        protected override void Generate(AlterColumnOperation operation, IModel model, MigrationCommandListBuilder builder)
-        {
-            base.Generate(operation, model, builder);
-        }
-
-        /// <summary>
-        ///     <para>
-        ///         Can be overridden by database providers to build commands for the given <see cref="T:Microsoft.EntityFrameworkCore.Migrations.Operations.AlterTableOperation" />
-        ///         by making calls on the given <see cref="T:Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder" />.
-        ///     </para>
-        ///     <para>
-        ///         Note that the default implementation of this method does nothing because there is no common metadata
-        ///         relating to this operation. Providers only need to override this method if they have some provider-specific
-        ///         annotations that must be handled.
-        ///     </para>
-        /// </summary>
-        /// <param name="operation"> The operation. </param>
-        /// <param name="model"> The target model which may be <see langword="null" /> if the operations exist without a model. </param>
-        /// <param name="builder"> The command builder to use to build the commands. </param>
-        protected override void Generate(AlterTableOperation operation, IModel model, MigrationCommandListBuilder builder)
-        {
-            base.Generate(operation, model, builder);
         }
 
         protected override void Generate(AlterSequenceOperation operation, IModel model, MigrationCommandListBuilder builder)

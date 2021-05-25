@@ -10,7 +10,7 @@
     <RepositoryUrl>https://github.com/CUSTIS-public/CUSTIS.OracleIdempotentSqlGenerator</RepositoryUrl>
     <PackageTags>Oracle, Idempotent, SqlGenerator, EFCore, EntityFrameworkCore, Migration, IMigrationsSqlGenerator</PackageTags>
     <Product>CUSTIS.OracleIdempotentSqlGenerator</Product>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -31,6 +31,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         private const string SequenceName = "TEST_SEQ_1";
         private const string NewSequenceName = "NEW_TEST_SEQ_1";
         private const string RowVersionColumnName = "TIMESTAMP";
+        private const string TableComment = "Table comment";
+        private const string ColumnComment = "Column comment";
 
         public IdempotentSqlGeneratorTests(ITestOutputHelper testOutputHelper)
         {
@@ -936,7 +938,94 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
         #region Comments
 
-        [Fact(Skip = "Not impl")]
+        [Fact]
+        public void Generate_CreateTableOperation_CommentIsSet()
+        {
+            //Arrange
+            DropTestTable();
+            var operations = new[] { new CreateTableOperation
+            {
+                Name = TableName,
+                Comment = TableComment,
+                Columns =
+                {
+                    new AddColumnOperation
+                    {
+                        Name = Column1Name,
+                        Table = TableName,
+                        ClrType = typeof(int),
+                        ColumnType = "number",
+                        Comment = ColumnComment,
+                    }
+                }
+            } };
+
+            //Act
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(1, commands.Count);
+            Assert.False(DoesTableExist(TableName));
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.True(DoesTableExist(TableName));
+            Assert.Equal(TableComment, GetTableComment());
+            Assert.Equal(ColumnComment, GetColumnComment(Column1Name));
+        }
+
+        [Fact]
+        public void Generate_AddColumnOperation_CommentIsSet()
+        {
+            //Arrange
+            ReCreateTestTable();
+            var operations = new[]
+            {
+                new AddColumnOperation
+                {
+                    Name = Column2Name,
+                    Table = TableName,
+                    ClrType = typeof(int),
+                    ColumnType = "number",
+                    Comment = ColumnComment,
+                }
+            };
+
+            //Act
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(1, commands.Count);
+            Assert.False(DoesColumnExist(Column2Name));
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.True(DoesColumnExist(Column2Name));
+            Assert.Equal(ColumnComment, GetColumnComment(Column2Name));
+        }
+
+        [Fact]
+        public void Generate_AlterTableOperation_CommentIsSet()
+        {
+            //Arrange
+            ReCreateTestTable();
+            var operations = new[]
+            {
+                new AlterTableOperation
+                {
+                    Name = TableName,
+                    Comment = TableComment,
+                }
+            };
+
+            //Act
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Null(GetTableComment());
+            Database.ExecuteSqlRaw(commands[0].CommandText);
+            Assert.Equal(TableComment, GetTableComment());
+        }
+
+        [Fact]
         public void Generate_AlterColumnOperation_CommentIsSet()
         {
             //Arrange
@@ -948,24 +1037,33 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                     Name = Column1Name,
                     Table = TableName,
                     ClrType = typeof(int),
-                    Comment = "Some Comment"
+                    Comment = ColumnComment,
                 }
             };
 
-            //Act 
+            //Act
             var commands = _sqlGenerator.Generate(operations);
 
             //Assert
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Assert.Equal("Some Comment", GetColumnComment(Column1Name));
+            Assert.Null(GetColumnComment(Column1Name));
+            foreach (var command in commands)
+            {
+                Database.ExecuteSqlRaw(command.CommandText);
+            }
+            Assert.Equal(ColumnComment, GetColumnComment(Column1Name));
+        }
+
+        private string GetTableComment()
+        {
+            return ExecuteScalar<string>("SELECT COMMENTS FROM ALL_TAB_COMMENTS " +
+                                         $"WHERE table_name = '{TableName}'");
         }
 
         private string GetColumnComment(string columnName)
         {
             return ExecuteScalar<string>("SELECT COMMENTS FROM ALL_COL_COMMENTS " +
-                                             $"WHERE table_name = '{TableName}' AND column_name = '{columnName}'");
+                                         $"WHERE table_name = '{TableName}' AND column_name = '{columnName}'");
         }
-
 
         #endregion
 

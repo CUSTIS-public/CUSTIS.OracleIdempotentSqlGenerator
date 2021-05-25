@@ -21,6 +21,10 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         private bool InsideCreateRowVersionTrigger { get; set; } = false;
 
+        public bool InsideCreateComment { get; set; } = false;
+
+        public bool InsideAddColumn { get; set; } = false;
+
         public bool EscapeQuotes { get; set; } = false;
 
         /// <summary>
@@ -35,12 +39,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 o = o.Replace("'", "''");
             }
 
-            if (!InsideCreateTable)
-            {
-                return base.Append(o);
-            }
-
-            if (o == "CREATE OR REPLACE TRIGGER ")
+            if (InsideCreateTable && o == "CREATE OR REPLACE TRIGGER ")
             {
                 InsideCreateRowVersionTrigger = true;
                 EscapeQuotes = true;
@@ -48,12 +47,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 return base.Append($"EXECUTE IMMEDIATE '{o}");
             }
 
-            if (!InsideCreateRowVersionTrigger)
-            {
-                return base.Append(o);
-            }
-
-            if (o == "END")
+            if (InsideCreateRowVersionTrigger && o == "END")
             {
                 InsideCreateRowVersionTrigger = false;
                 EscapeQuotes = false;
@@ -61,15 +55,42 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 return base.Append($"; END;';");
             }
 
+            if ((InsideCreateTable || InsideAddColumn) && (o == "COMMENT ON TABLE " || o == "COMMENT ON COLUMN "))
+            {
+                InsideCreateComment = true;
+                EscapeQuotes = true;
+                // Wrap creation of comment into EXECUTE IMMEDIATE
+                if (InsideAddColumn) base.AppendLine("';");
+                return base.Append($"EXECUTE IMMEDIATE '{o}");
+            }
+
+            if (InsideCreateComment && o.StartsWith("N'"))
+            {
+                return base.Append(o.Substring(1));
+            }
+
             return base.Append(o);   
         }
 
         public override MigrationCommandListBuilder AppendLine(string o)
         {
-            if (IgnoreEndOfStatement && o == _statementTerminator)
+            if (o == _statementTerminator)
             {
-                return this;
+                if (InsideCreateComment)
+                {
+                    InsideCreateComment = false;
+                    EscapeQuotes = false;
+                    // Wrap creation of comment into EXECUTE IMMEDIATE -- end
+                    if (InsideCreateTable) base.AppendLine("';");
+                    return this;
+                }
+
+                if (IgnoreEndOfStatement)
+                {
+                    return this;
+                }
             }
+
             return base.AppendLine(o);
         }
 
