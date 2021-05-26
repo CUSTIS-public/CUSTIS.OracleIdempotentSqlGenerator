@@ -1022,6 +1022,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Null(GetTableComment());
             Database.ExecuteSqlRaw(commands[0].CommandText);
+            Database.ExecuteSqlRaw(commands[0].CommandText);
             Assert.Equal(TableComment, GetTableComment());
         }
 
@@ -1048,6 +1049,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.Null(GetColumnComment(Column1Name));
             foreach (var command in commands)
             {
+                Database.ExecuteSqlRaw(command.CommandText);
                 Database.ExecuteSqlRaw(command.CommandText);
             }
             Assert.Equal(ColumnComment, GetColumnComment(Column1Name));

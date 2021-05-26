@@ -21,7 +21,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         private bool InsideCreateRowVersionTrigger { get; set; } = false;
 
-        public bool InsideCreateComment { get; set; } = false;
+        private bool InsideCreateComment { get; set; } = false;
 
         public bool InsideAddColumn { get; set; } = false;
 
@@ -74,21 +74,23 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         public override MigrationCommandListBuilder AppendLine(string o)
         {
-            if (o == _statementTerminator)
+            if (o != _statementTerminator)
             {
-                if (InsideCreateComment)
-                {
-                    InsideCreateComment = false;
-                    EscapeQuotes = false;
-                    // Wrap creation of comment into EXECUTE IMMEDIATE -- end
-                    if (InsideCreateTable) base.AppendLine("';");
-                    return this;
-                }
+                return base.AppendLine(o);
+            }
 
-                if (IgnoreEndOfStatement)
-                {
-                    return this;
-                }
+            if (InsideCreateComment)
+            {
+                InsideCreateComment = false;
+                EscapeQuotes = false;
+                // Wrap creation of comment into EXECUTE IMMEDIATE -- end
+                if (InsideCreateTable) base.AppendLine("';");
+                return this;
+            }
+
+            if (IgnoreEndOfStatement)
+            {
+                return this;
             }
 
             return base.AppendLine(o);

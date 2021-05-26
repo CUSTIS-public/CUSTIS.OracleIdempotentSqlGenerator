@@ -159,12 +159,12 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(AlterColumnOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            var comment = operation.Comment;
+            var newComment = operation.Comment;
             operation.Comment = operation.OldColumn.Comment;
 
             base.Generate(operation, model, builder);
 
-            if (comment == operation.OldColumn.Comment)
+            if (newComment == operation.OldColumn.Comment)
                 return;
             builder.AppendLine("BEGIN");
             using (builder.Indent())
@@ -176,7 +176,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                     .Append(".")
                     .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name))
                     .Append(" IS ")
-                    .Append($"''{comment}'''")
+                    .Append($"''{newComment}'''")
                     .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
             }
             builder.AppendLine("END;");
@@ -251,12 +251,12 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
         protected override void Generate(AlterTableOperation operation, IModel model, MigrationCommandListBuilder builder)
         {
-            var comment = operation.Comment;
+            var newComment = operation.Comment;
             operation.Comment = operation.OldTable.Comment;
 
             base.Generate(operation, model, builder);
 
-            if (comment == operation.OldTable.Comment)
+            if (newComment == operation.OldTable.Comment)
                 return;
             builder.AppendLine("BEGIN");
             using (builder.Indent())
@@ -266,7 +266,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                     .Append("COMMENT ON TABLE ")
                     .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
                     .Append(" IS ")
-                    .Append($"''{comment}'''")
+                    .Append($"''{newComment}'''")
                     .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
             }
             builder.AppendLine("END;");
