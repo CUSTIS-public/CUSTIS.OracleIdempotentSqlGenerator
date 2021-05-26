@@ -52,7 +52,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 InsideCreateRowVersionTrigger = false;
                 EscapeQuotes = false;
                 // Wrap creation of row version trigger into EXECUTE IMMEDIATE -- end
-                return base.Append($"; END;';");
+                return base.AppendLine("; END;';");
             }
 
             if ((InsideCreateTable || InsideAddColumn) && (o == "COMMENT ON TABLE " || o == "COMMENT ON COLUMN "))
@@ -66,6 +66,10 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
 
             if (InsideCreateComment && o.StartsWith("N'"))
             {
+                // In case of data we have meta-information from model about actual storage types for strings
+                // (varchar2 or nvarchar2, ansi or unicode). But in case of comments there is no meta-information.
+                // Provider regards them as unicode by default and prefixes with "N". Actual storage type
+                // for comments is ansi, so we have to cut off the prefix.
                 return base.Append(o.Substring(1));
             }
 
