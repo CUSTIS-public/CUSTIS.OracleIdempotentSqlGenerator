@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Description>Idempotent SQL Generator for Oracle</Description>
     <Copyright>CUSTIS</Copyright>
-    <Authors>ishatalkin@gmail.com</Authors>
+    <Authors>ishatalkin@gmail.com, dsid2003@gmail.com</Authors>
     <Company>CUSTIS</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/CUSTIS-public/CUSTIS.OracleIdempotentSqlGenerator</RepositoryUrl>
