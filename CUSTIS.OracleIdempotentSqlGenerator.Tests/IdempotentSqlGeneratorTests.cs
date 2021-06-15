@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -68,8 +69,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesTableExist(TableName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesTableExist(TableName));
         }
 
@@ -112,7 +113,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesTableExist(TableName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
             Assert.True(DoesTableExist(TableName));
 
             Database.ExecuteSqlRaw($"INSERT INTO {TableName} ({Column1Name}) VALUES (1)");
@@ -140,8 +141,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesTableExist(TableName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesTableExist(TableName));
         }
 
@@ -166,8 +167,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.Equal(1, commands.Count);
             Assert.True(DoesTableExist(TableName));
             Assert.False(DoesTableExist(NewTableName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesTableExist(TableName));
             Assert.True(DoesTableExist(NewTableName));
         }
@@ -202,7 +203,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 },
             }};
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private void DropTestTable()
@@ -213,8 +214,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 new DropTableOperation{Name = NewTableName},
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[1].CommandText);
+            ExecuteCommands(commands);
         }
 
         #endregion
@@ -242,8 +242,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesPrimaryKeyExist(Column1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesPrimaryKeyExist(Column1Name));
         }
 
@@ -261,8 +261,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesPrimaryKeyExist(Column1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesPrimaryKeyExist(Column1Name));
         }
 
@@ -291,8 +291,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesForeignKeyExist(Fk1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesForeignKeyExist(Fk1Name));
         }
 
@@ -310,8 +310,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesForeignKeyExist(Fk1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesForeignKeyExist(Fk1Name));
         }
 
@@ -336,8 +336,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesUniqueConstraintExist(Column1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesUniqueConstraintExist(Column1Name));
         }
 
@@ -355,8 +355,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesUniqueConstraintExist(Column1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesUniqueConstraintExist(Column1Name));
         }
 
@@ -382,8 +382,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesCheckConstraintExist(Column1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesCheckConstraintExist(Column1Name));
         }
 
@@ -401,8 +401,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesCheckConstraintExist(Column1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesCheckConstraintExist(Column1Name));
         }
 
@@ -426,8 +426,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
             //Assert
             Assert.Equal(1, commands.Count);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesIndexExist(Index1Name));
         }
 
@@ -446,8 +446,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesIndexExist(Index1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesIndexExist(Index1Name));
         }
 
@@ -474,8 +474,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.Equal(1, commands.Count);
             Assert.True(DoesIndexExist(Index1Name));
             Assert.False(DoesIndexExist(Index1NewName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesIndexExist(Index1Name));
             Assert.True(DoesIndexExist(Index1NewName));
         }
@@ -492,7 +492,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private void CreatePrimaryKey(string name)
@@ -507,7 +507,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private void CreateForeignKey(string name)
@@ -525,7 +525,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private void CreateUniqueConstraint(string name)
@@ -540,7 +540,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private void CreateCheckConstraint(string name)
@@ -556,7 +556,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             };
 
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private bool DoesPrimaryKeyExist(string name)
@@ -621,8 +621,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesColumnExist(Column2Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesColumnExist(Column2Name));
         }
 
@@ -643,8 +643,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.Equal(1, commands.Count);
             _testOutputHelper.WriteLine(commands[0].CommandText);
             Assert.False(DoesColumnExist(RowVersionColumnName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesColumnExist(RowVersionColumnName));
         }
 
@@ -672,7 +672,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 CreateAddRowVersionOperation()
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
 
             //Act 
             Database.ExecuteSqlRaw($"INSERT INTO {TableName} ({Column1Name}) VALUES (1)");
@@ -697,9 +697,30 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
             //Assert
             Assert.True(DoesColumnExist(Column2Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesColumnExist(Column2Name));
+        }
+
+        [Fact]
+        public void Generate_DropColumnOperation_DoesntDropRowVersion()
+        {
+            //Arrange
+            ReCreateTestTable();
+            CreateRowVersionColumn();
+            CreateColumn(Column2Name);
+            var operations = new[] { new DropColumnOperation { Name = Column2Name, Table = TableName } };
+
+            //Act 
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.True(DoesTriggerExist("rowversion_TEST_TABLE"));
+            Assert.True(DoesColumnExist(Column2Name));
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
+            Assert.False(DoesColumnExist(Column2Name));
+            Assert.True(DoesTriggerExist("rowversion_TEST_TABLE"));
         }
 
         [Fact]
@@ -717,10 +738,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.True(DoesColumnExist(RowVersionColumnName));
             Assert.True(DoesTriggerExist("rowversion_TEST_TABLE"));
             _testOutputHelper.WriteLine(commands[1].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[1].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[1].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesColumnExist(RowVersionColumnName));
             Assert.False(DoesTriggerExist("rowversion_TEST_TABLE"));
         }
@@ -746,8 +765,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.True(DoesColumnExist(Column1Name));
             Assert.False(DoesColumnExist(Column2Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesColumnExist(Column2Name));
             Assert.False(DoesColumnExist(Column1Name));
         }
@@ -772,8 +791,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
             //Assert
             Assert.True(DoesColumnExist(Column1Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesColumnExist(Column1Name));
         }
 
@@ -804,7 +823,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private void CreateRowVersionColumn()
@@ -814,7 +833,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 CreateAddRowVersionOperation()
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         #endregion
@@ -841,8 +860,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesSequenceExist(SequenceName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesSequenceExist(SequenceName));
         }
 
@@ -859,8 +878,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesSequenceExist(SequenceName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesSequenceExist(SequenceName));
         }
 
@@ -883,8 +902,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.Equal(1, commands.Count);
             Assert.True(DoesSequenceExist(SequenceName));
             Assert.False(DoesSequenceExist(NewSequenceName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.False(DoesSequenceExist(SequenceName));
             Assert.True(DoesSequenceExist(NewSequenceName));
         }
@@ -907,8 +926,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.True(DoesSequenceExist(SequenceName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesSequenceExist(SequenceName));
         }
 
@@ -922,7 +941,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private void CreateSequence(string name)
@@ -966,8 +985,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesTableExist(TableName));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesTableExist(TableName));
             Assert.Equal(TableComment, GetTableComment());
             Assert.Equal(ColumnComment, GetColumnComment(Column1Name));
@@ -996,8 +1015,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Assert
             Assert.Equal(1, commands.Count);
             Assert.False(DoesColumnExist(Column2Name));
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.True(DoesColumnExist(Column2Name));
             Assert.Equal(ColumnComment, GetColumnComment(Column2Name));
         }
@@ -1021,8 +1040,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
             //Assert
             Assert.Null(GetTableComment());
-            Database.ExecuteSqlRaw(commands[0].CommandText);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
             Assert.Equal(TableComment, GetTableComment());
         }
 
@@ -1047,12 +1066,17 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
             //Assert
             Assert.Null(GetColumnComment(Column1Name));
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
+            Assert.Equal(ColumnComment, GetColumnComment(Column1Name));
+        }
+
+        private void ExecuteCommands(IReadOnlyList<MigrationCommand> commands)
+        {
             foreach (var command in commands)
             {
                 Database.ExecuteSqlRaw(command.CommandText);
-                Database.ExecuteSqlRaw(command.CommandText);
             }
-            Assert.Equal(ColumnComment, GetColumnComment(Column1Name));
         }
 
         private string GetTableComment()
@@ -1076,7 +1100,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 operation
             };
             var commands = _sqlGenerator.Generate(operations);
-            Database.ExecuteSqlRaw(commands[0].CommandText);
+            ExecuteCommands(commands);
         }
 
         private bool DoesSequenceExist(string name)

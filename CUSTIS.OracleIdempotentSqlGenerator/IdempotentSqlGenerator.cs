@@ -126,8 +126,17 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
                 builder.AppendLine("IF I = 1 THEN");
                 using (builder.Indent())
                 {
-                    builder.Append($"EXECUTE IMMEDIATE 'DROP TRIGGER \"{triggerName}\"';");
-                    builder.AppendLine();
+                    builder.AppendLine($"-- Check column {operation.Name} is used in trigger {triggerName};");
+                    builder.AppendLine($"I := DBMS_LOB.INSTR(DBMS_METADATA.GET_DDL('TRIGGER', '{triggerName}'), ':NEW.\"{operation.Name}\"');");
+
+                    builder.AppendLine("IF I > 0 THEN");
+                    using (builder.Indent())
+                    {
+                        builder.Append($"EXECUTE IMMEDIATE 'DROP TRIGGER \"{triggerName}\"';");
+                        builder.AppendLine();
+                    }
+
+                    builder.AppendLine("END IF;");
                 }
 
                 builder.AppendLine("END IF;");
