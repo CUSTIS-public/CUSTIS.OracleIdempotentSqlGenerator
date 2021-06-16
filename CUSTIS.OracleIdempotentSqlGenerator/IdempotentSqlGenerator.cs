@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -581,6 +583,38 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
         }
 
         #endregion
+
+        protected override void Generate(
+            [NotNull] InsertDataOperation operation,
+            IModel model,
+            [NotNull] MigrationCommandListBuilder builder,
+            bool terminate = true)
+        {
+            if (operation == null) throw new ArgumentNullException(nameof(operation));
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+
+            var sqlBuilder = new StringBuilder();
+            foreach (var modificationCommand in GenerateModificationCommands(operation, model))
+            {
+                sqlBuilder.AppendLine($"SELECT COUNT(*) INTO I FROM \"{operation.Table}\" WHERE ");
+                foreach (var modification in modificationCommand.ColumnModifications)
+                {
+                    sqlBuilder.AppendLine(
+                        $"    \"{modification.ColumnName}\" = {modification.TypeMapping.GenerateProviderValueSqlLiteral(modification.Value)}");
+                }
+
+                sqlBuilder.AppendLine(";");
+                sqlBuilder.AppendLine("IF I = 0 THEN");
+                SqlGenerator.AppendInsertOperation(
+                    sqlBuilder,
+                    modificationCommand,
+                    0);
+                sqlBuilder.AppendLine("END IF;");
+            }
+
+            InIdempotentWrapper(builder, terminate, () => { builder.Append(sqlBuilder.ToString()); });
+        }
+
 
         #region Help code
 

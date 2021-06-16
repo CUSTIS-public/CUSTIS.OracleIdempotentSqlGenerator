@@ -18,7 +18,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         private readonly ITestOutputHelper _testOutputHelper;
         private readonly IMigrationsSqlGenerator _sqlGenerator;
 
-        private readonly IdempotentDbContext _dbContext = new IdempotentDbContext();
+        private readonly IdempotentDbContext _dbContext = new();
         private DatabaseFacade Database => _dbContext.Database;
 
 
@@ -48,20 +48,23 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         {
             //Arrange
             DropTestTable();
-            var operations = new[] { new CreateTableOperation
+            var operations = new[]
             {
-                Name = TableName,
-                Columns =
+                new CreateTableOperation
                 {
-                    new AddColumnOperation
+                    Name = TableName,
+                    Columns =
                     {
-                        Name = Column1Name,
-                        Table = TableName,
-                        ClrType = typeof(int),
-                        ColumnType = "number"
+                        new AddColumnOperation
+                        {
+                            Name = Column1Name,
+                            Table = TableName,
+                            ClrType = typeof(int),
+                            ColumnType = "number"
+                        }
                     }
-                },
-            } };
+                }
+            };
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -103,7 +106,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                             IsNullable = false,
                             DefaultValue = new byte[0]
                         }
-                    },
+                    }
                 }
             };
 
@@ -125,7 +128,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
         private long ToInt64(byte[] byteArray)
         {
-            return BitConverter.ToInt64(new byte[] { 0, 0, 0, 0 }.Concat(byteArray).ToArray());
+            return BitConverter.ToInt64(new byte[] {0, 0, 0, 0}.Concat(byteArray).ToArray());
         }
 
         [Fact]
@@ -133,7 +136,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         {
             //Arrange
             ReCreateTestTable();
-            var operations = new[] { new DropTableOperation { Name = TableName } };
+            var operations = new[] {new DropTableOperation {Name = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -188,20 +191,23 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
         private void CreateTestTable()
         {
-            var operations = new[] {new CreateTableOperation
+            var operations = new[]
             {
-                Name = TableName,
-                Columns =
+                new CreateTableOperation
                 {
-                    new AddColumnOperation
+                    Name = TableName,
+                    Columns =
                     {
-                        Name = Column1Name,
-                        Table = TableName,
-                        ClrType = typeof(int),
-                        ColumnType = "number"
+                        new AddColumnOperation
+                        {
+                            Name = Column1Name,
+                            Table = TableName,
+                            ClrType = typeof(int),
+                            ColumnType = "number"
+                        }
                     }
-                },
-            }};
+                }
+            };
             var commands = _sqlGenerator.Generate(operations);
             ExecuteCommands(commands);
         }
@@ -210,8 +216,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         {
             var operations = new[]
             {
-                new DropTableOperation{Name = TableName},
-                new DropTableOperation{Name = NewTableName},
+                new DropTableOperation {Name = TableName},
+                new DropTableOperation {Name = NewTableName}
             };
             var commands = _sqlGenerator.Generate(operations);
             ExecuteCommands(commands);
@@ -232,7 +238,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 {
                     Name = Column1Name,
                     Table = TableName,
-                    Columns = new []{Column1Name}
+                    Columns = new[] {Column1Name}
                 }
             };
 
@@ -253,7 +259,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreatePrimaryKey(Column1Name);
-            var operations = new[] { new DropPrimaryKeyOperation { Name = Column1Name, Table = TableName } };
+            var operations = new[] {new DropPrimaryKeyOperation {Name = Column1Name, Table = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -279,9 +285,9 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                     Name = Fk1Name,
 
                     Table = TableName,
-                    Columns = new []{Column1Name},
+                    Columns = new[] {Column1Name},
                     PrincipalTable = TableName,
-                    PrincipalColumns = new []{Column1Name}
+                    PrincipalColumns = new[] {Column1Name}
                 }
             };
 
@@ -302,7 +308,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreateForeignKey(Fk1Name);
-            var operations = new[] { new DropForeignKeyOperation { Name = Fk1Name, Table = TableName } };
+            var operations = new[] {new DropForeignKeyOperation {Name = Fk1Name, Table = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -326,7 +332,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 {
                     Name = Column1Name,
                     Table = TableName,
-                    Columns = new []{Column1Name},
+                    Columns = new[] {Column1Name}
                 }
             };
 
@@ -347,7 +353,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreateUniqueConstraint(Column1Name);
-            var operations = new[] { new DropUniqueConstraintOperation { Name = Column1Name, Table = TableName } };
+            var operations = new[] {new DropUniqueConstraintOperation {Name = Column1Name, Table = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -393,7 +399,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreateCheckConstraint(Column1Name);
-            var operations = new[] { new DropCheckConstraintOperation { Name = Column1Name, Table = TableName } };
+            var operations = new[] {new DropCheckConstraintOperation {Name = Column1Name, Table = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -417,7 +423,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 {
                     Name = Index1Name,
                     Table = TableName,
-                    Columns = new []{Column1Name},
+                    Columns = new[] {Column1Name}
                 }
             };
 
@@ -438,7 +444,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreateIndex(Index1Name, Column1Name);
-            var operations = new[] { new DropIndexOperation { Name = Index1Name } };
+            var operations = new[] {new DropIndexOperation {Name = Index1Name}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -463,7 +469,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 {
                     Name = Index1Name,
                     NewName = Index1NewName,
-                    Table = TableName,
+                    Table = TableName
                 }
             };
 
@@ -488,7 +494,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 {
                     Name = indexName,
                     Table = TableName,
-                    Columns = new[] {columnName},
+                    Columns = new[] {columnName}
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
@@ -521,7 +527,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                     Table = TableName,
                     Columns = new[] {Column1Name},
                     PrincipalTable = TableName,
-                    PrincipalColumns = new []{Column1Name}
+                    PrincipalColumns = new[] {Column1Name}
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
@@ -536,7 +542,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 {
                     Name = name,
                     Table = TableName,
-                    Columns = new[] {Column1Name},
+                    Columns = new[] {Column1Name}
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
@@ -650,7 +656,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
 
         private static AddColumnOperation CreateAddRowVersionOperation()
         {
-            return new AddColumnOperation
+            return new()
             {
                 Name = RowVersionColumnName,
                 Table = TableName,
@@ -690,7 +696,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreateColumn(Column2Name);
-            var operations = new[] { new DropColumnOperation { Name = Column2Name, Table = TableName } };
+            var operations = new[] {new DropColumnOperation {Name = Column2Name, Table = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -709,7 +715,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             ReCreateTestTable();
             CreateRowVersionColumn();
             CreateColumn(Column2Name);
-            var operations = new[] { new DropColumnOperation { Name = Column2Name, Table = TableName } };
+            var operations = new[] {new DropColumnOperation {Name = Column2Name, Table = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -729,7 +735,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             ReCreateTestTable();
             CreateRowVersionColumn();
-            var operations = new[] { new DropColumnOperation { Name = RowVersionColumnName, Table = TableName } };
+            var operations = new[] {new DropColumnOperation {Name = RowVersionColumnName, Table = TableName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -870,7 +876,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         {
             //Arrange
             CreateSequence(SequenceName);
-            var operations = new[] { new DropSequenceOperation { Name = SequenceName } };
+            var operations = new[] {new DropSequenceOperation {Name = SequenceName}};
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -889,11 +895,14 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             //Arrange
             CreateSequence(SequenceName);
             DropSequence(NewSequenceName);
-            var operations = new[] { new RenameSequenceOperation
+            var operations = new[]
             {
-                Name = SequenceName,
-                NewName = NewSequenceName
-            } };
+                new RenameSequenceOperation
+                {
+                    Name = SequenceName,
+                    NewName = NewSequenceName
+                }
+            };
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -913,12 +922,15 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         {
             //Arrange
             CreateSequence(SequenceName);
-            var operations = new[] { new AlterSequenceOperation
+            var operations = new[]
             {
-                Name = SequenceName,
-                MaxValue = 100,
-                MinValue = 0
-            } };
+                new AlterSequenceOperation
+                {
+                    Name = SequenceName,
+                    MaxValue = 100,
+                    MinValue = 0
+                }
+            };
 
             //Act 
             var commands = _sqlGenerator.Generate(operations);
@@ -937,7 +949,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             {
                 new DropSequenceOperation
                 {
-                    Name = name,
+                    Name = name
                 }
             };
             var commands = _sqlGenerator.Generate(operations);
@@ -962,22 +974,25 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         {
             //Arrange
             DropTestTable();
-            var operations = new[] { new CreateTableOperation
+            var operations = new[]
             {
-                Name = TableName,
-                Comment = TableComment,
-                Columns =
+                new CreateTableOperation
                 {
-                    new AddColumnOperation
+                    Name = TableName,
+                    Comment = TableComment,
+                    Columns =
                     {
-                        Name = Column1Name,
-                        Table = TableName,
-                        ClrType = typeof(int),
-                        ColumnType = "number",
-                        Comment = ColumnComment,
+                        new AddColumnOperation
+                        {
+                            Name = Column1Name,
+                            Table = TableName,
+                            ClrType = typeof(int),
+                            ColumnType = "number",
+                            Comment = ColumnComment
+                        }
                     }
                 }
-            } };
+            };
 
             //Act
             var commands = _sqlGenerator.Generate(operations);
@@ -1005,7 +1020,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                     Table = TableName,
                     ClrType = typeof(int),
                     ColumnType = "number",
-                    Comment = ColumnComment,
+                    Comment = ColumnComment
                 }
             };
 
@@ -1031,7 +1046,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 new AlterTableOperation
                 {
                     Name = TableName,
-                    Comment = TableComment,
+                    Comment = TableComment
                 }
             };
 
@@ -1057,7 +1072,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                     Name = Column1Name,
                     Table = TableName,
                     ClrType = typeof(int),
-                    Comment = ColumnComment,
+                    Comment = ColumnComment
                 }
             };
 
@@ -1071,10 +1086,39 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             Assert.Equal(ColumnComment, GetColumnComment(Column1Name));
         }
 
+        [Fact]
+        public void Generate_InsertDataOperation_IsIdempotent()
+        {
+            //Arrange
+            ReCreateTestTable();
+            var values = new object[1, 1];
+            values[0, 0] = 1;
+            var operations = new[]
+            {
+                new InsertDataOperation()
+                {
+                    Table = TableName,
+                    Columns = new[] {Column1Name},
+                    ColumnTypes = new []{"NUMBER"},
+                    Values = values
+                }
+            };
+
+            //Act
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(0, ExecuteScalar<decimal>($"SELECT COUNT(*) FROM {TableName} WHERE {Column1Name} = 1"));
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
+            Assert.Equal(1, ExecuteScalar<decimal>($"SELECT COUNT(*) FROM {TableName} WHERE {Column1Name} = 1"));
+        }
+
         private void ExecuteCommands(IReadOnlyList<MigrationCommand> commands)
         {
             foreach (var command in commands)
             {
+                _testOutputHelper.WriteLine(command.CommandText);
                 Database.ExecuteSqlRaw(command.CommandText);
             }
         }
@@ -1117,11 +1161,8 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             if (connection.State != System.Data.ConnectionState.Open) connection.Open();
             command.CommandText = sql;
             var result = command.ExecuteScalar();
-            if (result == null || result is DBNull)
-            {
-                return default;
-            }
-            return (T)result;
+            if (result == null || result is DBNull) return default;
+            return (T) result;
         }
     }
 }
