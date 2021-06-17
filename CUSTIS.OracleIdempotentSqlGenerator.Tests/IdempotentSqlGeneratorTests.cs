@@ -186,27 +186,25 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
         private void ReCreateTestTable()
         {
             DropTestTable();
-            CreateTestTable();
+            CreateTestTable(new AddColumnOperation
+            {
+                Name = Column1Name,
+                Table = TableName,
+                ClrType = typeof(int),
+                ColumnType = "number"
+            });
         }
 
-        private void CreateTestTable()
+        private void CreateTestTable(params AddColumnOperation[] columns)
         {
+            var createTableOperation = new CreateTableOperation
+            {
+                Name = TableName
+            };
+            createTableOperation.Columns.AddRange(columns);
             var operations = new[]
             {
-                new CreateTableOperation
-                {
-                    Name = TableName,
-                    Columns =
-                    {
-                        new AddColumnOperation
-                        {
-                            Name = Column1Name,
-                            Table = TableName,
-                            ClrType = typeof(int),
-                            ColumnType = "number"
-                        }
-                    }
-                }
+                createTableOperation
             };
             var commands = _sqlGenerator.Generate(operations);
             ExecuteCommands(commands);
@@ -1099,7 +1097,7 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
                 {
                     Table = TableName,
                     Columns = new[] {Column1Name},
-                    ColumnTypes = new []{"NUMBER"},
+                    ColumnTypes = new[] {"NUMBER"},
                     Values = values
                 }
             };
@@ -1112,6 +1110,86 @@ namespace CUSTIS.OracleIdempotentSqlGenerator.Tests
             ExecuteCommands(commands);
             ExecuteCommands(commands);
             Assert.Equal(1, ExecuteScalar<decimal>($"SELECT COUNT(*) FROM {TableName} WHERE {Column1Name} = 1"));
+        }
+
+        [Fact]
+        public void Generate_InsertDataOperationWithNullColumn_IsIdempotent()
+        {
+            //Arrange
+            DropTestTable();
+            CreateTestTable(new AddColumnOperation
+            {
+                Name = Column1Name,
+                Table = TableName,
+                ClrType = typeof(int?),
+                ColumnType = "number",
+                IsNullable = true
+            });
+            var values = new object[1, 1];
+            values[0, 0] = null;
+            var operations = new[]
+            {
+                new InsertDataOperation()
+                {
+                    Table = TableName,
+                    Columns = new[] {Column1Name},
+                    ColumnTypes = new[] {"NUMBER"},
+                    Values = values
+                }
+            };
+
+            //Act
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(0, ExecuteScalar<decimal>($"SELECT COUNT(*) FROM {TableName} WHERE {Column1Name} is null"));
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
+            Assert.Equal(1, ExecuteScalar<decimal>($"SELECT COUNT(*) FROM {TableName} WHERE {Column1Name} is null"));
+        }
+
+        [Fact]
+        public void Generate_InsertDataOperationMultipleColumns_IsIdempotent()
+        {
+            //Arrange
+            DropTestTable();
+            CreateTestTable(new AddColumnOperation
+                {
+                    Name = Column1Name,
+                    Table = TableName,
+                    ClrType = typeof(int),
+                    ColumnType = "number"
+                },
+                new AddColumnOperation
+                {
+                    Name = Column2Name,
+                    Table = TableName,
+                    ClrType = typeof(int?),
+                    ColumnType = "number",
+                    IsNullable = true
+                });
+            var values = new object[1, 2];
+            values[0, 0] = 1;
+            values[0, 1] = null;
+            var operations = new[]
+            {
+                new InsertDataOperation()
+                {
+                    Table = TableName,
+                    Columns = new[] {Column1Name, Column2Name},
+                    ColumnTypes = new[] {"NUMBER", "NUMBER"},
+                    Values = values
+                }
+            };
+
+            //Act
+            var commands = _sqlGenerator.Generate(operations);
+
+            //Assert
+            Assert.Equal(0, ExecuteScalar<decimal>($"SELECT COUNT(*) FROM {TableName}"));
+            ExecuteCommands(commands);
+            ExecuteCommands(commands);
+            Assert.Equal(1, ExecuteScalar<decimal>($"SELECT COUNT(*) FROM {TableName}"));
         }
 
         private void ExecuteCommands(IReadOnlyList<MigrationCommand> commands)

@@ -597,10 +597,16 @@ namespace CUSTIS.OracleIdempotentSqlGenerator
             foreach (var modificationCommand in GenerateModificationCommands(operation, model))
             {
                 sqlBuilder.AppendLine($"SELECT COUNT(*) INTO I FROM \"{operation.Table}\" WHERE ");
+                var first = true;
                 foreach (var modification in modificationCommand.ColumnModifications)
                 {
-                    sqlBuilder.AppendLine(
-                        $"    \"{modification.ColumnName}\" = {modification.TypeMapping.GenerateProviderValueSqlLiteral(modification.Value)}");
+                    sqlBuilder
+                        .Append(first ? "     " : " AND ")
+                        .Append($"\"{modification.ColumnName}\"")
+                        .AppendLine(modification.Value == null 
+                            ? " IS NULL" 
+                            : $" = {modification.TypeMapping.GenerateProviderValueSqlLiteral(modification.Value)}");
+                    first = false;
                 }
 
                 sqlBuilder.AppendLine(";");
