@@ -109,9 +109,9 @@ publish-nuget:
     - !reference [.dotnet-project]
     - !reference [.dotnet-project-version]
     - !reference [.add-git-tag]
-  needs:
-    - job: test
-      optional: true
+  # needs:
+  #   - job: test
+  #     optional: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
