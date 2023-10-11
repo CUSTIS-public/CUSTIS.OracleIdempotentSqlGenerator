@@ -1,0 +1,3 @@
+include:
+  - project: devops/include/default
+    file: ci/ci-default-nuget.yml
