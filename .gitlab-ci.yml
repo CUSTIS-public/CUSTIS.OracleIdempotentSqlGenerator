@@ -194,21 +194,21 @@ publish-nuget:
   # needs:
   #   - job: pack
   #     artifacts: true
-  # rules:
-  #   - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  #     when: never
-  #   - if: $NUGET_API_KEY == null || $NUGET_PUBLISH == "false" || $CI_COMMIT_REF_NAME =~ /^feature\/.*$/
-  #     when: never
-  #   - if: $NUGET_PUBLISH_MAIN == "false" && $CI_COMMIT_REF_NAME =~ /^(master|main)$/
-  #     when: never
-  #   - if: $CI_COMMIT_REF_NAME =~ /^(master|main)$/ && $NUGET_PUBLISH_MAIN == "false"
-  #     when: never
-  #   - if: $CI_COMMIT_REF_NAME =~ /^(master|main)|((fix|rel|release)(\/|-|_))(([0-9]+)(|\.[0-9]+)(|\.[0-9]+)(|\.[0-9]+))$/ && $NUGET_AUTO == "true"
-  #     when: on_success
-  #   - if: $CI_COMMIT_REF_NAME =~ /^(master|main)|((fix|rel|release)(\/|-|_))(([0-9]+)(|\.[0-9]+)(|\.[0-9]+)(|\.[0-9]+))$/
-  #     when: manual
-  #   - if: $CI_COMMIT_TAG && $NUGET_AUTO_TAG == "true"
-  #     when: on_success
-  #   - if: $CI_COMMIT_TAG
-  #     when: manual
-  #   - when: never
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $NUGET_API_KEY == null || $NUGET_PUBLISH == "false" || $CI_COMMIT_REF_NAME =~ /^feature\/.*$/
+      when: never
+    - if: $NUGET_PUBLISH_MAIN == "false" && $CI_COMMIT_REF_NAME =~ /^(master|main)$/
+      when: never
+    - if: $CI_COMMIT_REF_NAME =~ /^(master|main)$/ && $NUGET_PUBLISH_MAIN == "false"
+      when: never
+    - if: $CI_COMMIT_REF_NAME =~ /^(master|main)|((fix|rel|release)(\/|-|_))(([0-9]+)(|\.[0-9]+)(|\.[0-9]+)(|\.[0-9]+))$/ && $NUGET_AUTO == "true"
+      when: on_success
+    - if: $CI_COMMIT_REF_NAME =~ /^(master|main)|((fix|rel|release)(\/|-|_))(([0-9]+)(|\.[0-9]+)(|\.[0-9]+)(|\.[0-9]+))$/
+      when: manual
+    - if: $CI_COMMIT_TAG && $NUGET_AUTO_TAG == "true"
+      when: on_success
+    - if: $CI_COMMIT_TAG
+      when: manual
+    - when: never
