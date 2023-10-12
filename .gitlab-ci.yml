@@ -7,65 +7,14 @@ include:
       - git.yml
       - version.yml
 stages:
-  # - test
   - pack
   - publish
-
-# test:
-#   extends: .test-dotnet
 
 pack:
   extends: .pack-dotnet-nuget
 
-# publish-nexus:
-#   extends: .publish-dotnet-nexus
-
 publish-nuget:
   extends: .publish-dotnet-nuget
-
-
-## Заглушка под сервисы
-.docker-backend-service:
-  services:
-
-## Запуск тестирования
-# .test-dotnet:
-#   stage: test
-#   image: ${DOTNET_SDK_IMAGE}
-#   tags: [office-custis-ru]
-#   allow_failure: false
-#   script:
-#     - !reference [.npm-add-config-nexus]
-#     - !reference [.dotnet-add-nuget-config]
-#     - !reference [.dotnet-project-test]
-#   rules:
-#     - if: $DOTNET_TEST == "false" && $SONAR_ANALYZE == "false"
-#       when: never
-#     - if: $CI_COMMIT_TAG && $DOTNET_TEST_ON_TAG == "false"
-#       when: never
-#     - when: always
-#   coverage:  /Total\s*tests\s*coverage\s*(\d+\.\d+%)/
-#   artifacts:
-#     when: always
-#     name: coverage-reports
-#     paths:
-#       - $CI_PROJECT_DIR/reports
-#       - $CI_PROJECT_DIR/coverage
-#       - $CI_PROJECT_DIR/junit/*test-result.xml
-#     reports:
-#       coverage_report:
-#         coverage_format: cobertura
-#         path: $CI_PROJECT_DIR/reports/Cobertura.xml
-#       junit:
-#         - $CI_PROJECT_DIR/junit/*test-result.xml
-
-# ## Запуск тестирования c докер сервисами
-# .test-dotnet-with-service:
-#   stage: test
-#   extends: 
-#     - .test-dotnet
-#     - .docker-backend-service
-
 
 ## Сборка приложения dotnet
 .build-dotnet-app:
