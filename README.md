@@ -60,3 +60,13 @@ As Idempotent SqlGenerator inherits from OracleMigrationsSqlGenerator, it has th
 * Pack CUSTIS.OracleIdempotentSqlGenerator (`dotnet pack`)
 * Upload it to nuget
 * Create release at GitHub
+
+
+# Как работает CI:
+- При добавлении изменений в master происходит сборка пакета (без публикации)
+- При выставлении тега `x.x.x` - собирается версия пакет(а|ов) с версией тега и публикуется в https://www.nuget.org/packages/CUSTIS.OracleIdempotentSqlGenerator/
+- `x.x.x.x` формат подразумевает номера:
+    - `x`
+    - `x.x`
+    - `x.x.x`
+    - `x.x.x.x`
