@@ -17,11 +17,13 @@ stages:
 pack:
   extends: .pack-dotnet-nuget
 
-publish-nexus:
-  extends: .publish-dotnet-nexus
+# publish-nexus:
+#   extends: .publish-dotnet-nexus
 
 publish-nuget:
   extends: .publish-dotnet-nuget
+
+
 ## Заглушка под сервисы
 .docker-backend-service:
   services:
