@@ -6,16 +6,88 @@ include:
       - npm.yml
       - git.yml
       - version.yml
-
 stages:
+  # - test
   - pack
-  - publish-nuget
+  - publish
+
+# test:
+#   extends: .test-dotnet
 
 pack:
   extends: .pack-dotnet-nuget
 
+publish-nexus:
+  extends: .publish-dotnet-nexus
+
 publish-nuget:
   extends: .publish-dotnet-nuget
+## Заглушка под сервисы
+.docker-backend-service:
+  services:
+
+## Запуск тестирования
+# .test-dotnet:
+#   stage: test
+#   image: ${DOTNET_SDK_IMAGE}
+#   tags: [office-custis-ru]
+#   allow_failure: false
+#   script:
+#     - !reference [.npm-add-config-nexus]
+#     - !reference [.dotnet-add-nuget-config]
+#     - !reference [.dotnet-project-test]
+#   rules:
+#     - if: $DOTNET_TEST == "false" && $SONAR_ANALYZE == "false"
+#       when: never
+#     - if: $CI_COMMIT_TAG && $DOTNET_TEST_ON_TAG == "false"
+#       when: never
+#     - when: always
+#   coverage:  /Total\s*tests\s*coverage\s*(\d+\.\d+%)/
+#   artifacts:
+#     when: always
+#     name: coverage-reports
+#     paths:
+#       - $CI_PROJECT_DIR/reports
+#       - $CI_PROJECT_DIR/coverage
+#       - $CI_PROJECT_DIR/junit/*test-result.xml
+#     reports:
+#       coverage_report:
+#         coverage_format: cobertura
+#         path: $CI_PROJECT_DIR/reports/Cobertura.xml
+#       junit:
+#         - $CI_PROJECT_DIR/junit/*test-result.xml
+
+# ## Запуск тестирования c докер сервисами
+# .test-dotnet-with-service:
+#   stage: test
+#   extends: 
+#     - .test-dotnet
+#     - .docker-backend-service
+
+
+## Сборка приложения dotnet
+.build-dotnet-app:
+  stage: build
+  image: ${DOTNET_SDK_IMAGE}
+  tags: [office-custis-ru]
+  allow_failure: false
+  variables:
+    DOTNET_OUT: "${CI_PROJECT_DIR}/dotnet_out"
+  script:
+    - !reference [.npm-add-config-nexus]
+    - !reference [.dotnet-add-nuget-config]
+    - !reference [.dotnet-project]
+  needs:
+    - job: test
+      optional: true
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: on_success
+  artifacts:
+    paths:
+      - ${DOTNET_OUT}/
+    expire_in: 1 day
 
 ## Сборка и упаковка для nuget
 .pack-dotnet-nuget:
@@ -34,6 +106,9 @@ publish-nuget:
     - !reference [.dotnet-project]
     - !reference [.dotnet-project-version]
     - !reference [.add-git-tag]
+  needs:
+    - job: test
+      optional: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
@@ -53,6 +128,55 @@ publish-nuget:
       - ${DOTNET_OUT}/
     expire_in: 1 day
 
+## Сборка и упаковка для nuget
+.pack-netf-nuget:
+  stage: pack
+  image: ${DOTNET_SDK_IMAGE}
+  tags: [office-custis-ru]
+  allow_failure: false
+  variables:
+    DOTNET_OUT: "${CI_PROJECT_DIR}/dotnet_out"
+  script:
+    - !reference [.netf-add-nuget-config]
+    - !reference [.netf-nuget-pack-nuspec]
+  artifacts:
+    paths:
+      - ${DOTNET_OUT}/
+    expire_in: 1 day
+
+## Публикация в nexus
+.publish-dotnet-nexus:
+  stage: publish
+  image: ${DOTNET_SDK_IMAGE}
+  tags: [office-custis-ru]
+  retry: 1
+  variables:
+    NUGET_TARGET: "nexus"
+  script:
+    - !reference [.dotnet-project-nuget]
+  needs:
+    - job: pack
+      artifacts: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $NUGET_API_KEY_NEXUS == null || $NEXUS_PUBLISH == "false"
+      when: never
+    - if: $NEXUS_PUBLISH_MAIN == "false" && $CI_COMMIT_REF_NAME =~ /^(master|main)$/
+      when: never
+    - if: $NEXUS_PUBLISH_ON_TAG != "false" && $CI_COMMIT_TAG != null
+      when: on_success
+    - if: $NEXUS_PUBLISH_ON_REL != "false" && $CI_COMMIT_REF_NAME =~ /^((fix|rel|release)(\/|-|_))(([0-9]+)(|\.[0-9]+)(|\.[0-9]+)(|\.[0-9]+))$/
+      when: on_success
+      variables:
+        TAG_BETA: "true"
+    - if: $NEXUS_PUBLISH_ON_MAIN != "false" && ($CI_COMMIT_REF_NAME =~ /^(master|main)$/ || $CI_COMMIT_REF_NAME == $GIT_MAIN_BRANCH)
+      when: on_success
+    - if: $NEXUS_PUBLISH_ON_FT == "true" && $CI_COMMIT_REF_NAME =~ /^feature\/.*$/
+      when: on_success
+      variables:
+        TAG_BETA: "true"
+    - when: never
 
 ## Публикация в nuget.org
 .publish-dotnet-nuget:
